@@ -12,8 +12,8 @@ class TransactionController extends Controller
     {
         $transactions = Transaction::all();
 
-        return view('admin.dashboard.transactions.index', [
-            'transactions' => $transactions,
+        return view('admin.transaction.index', [
+            'transaction' => $transactions,
         ]);
     }
 
@@ -34,13 +34,24 @@ class TransactionController extends Controller
             'status' => $validatedData['status'],
         ]);
 
-        return redirect()->route('admin.transactions.index')->with('success', 'Transaction updated successfully.');
+        return redirect()->route('transaction.index')->with('success', 'Transaction updated successfully.');
     }
 
     public function destroy(Transaction $transaction)
     {
         $transaction->delete();
 
-        return redirect()->route('admin.transactions.index')->with('success', 'Transaction deleted successfully.');
+        return redirect()->route('transaction.index')->with('success', 'Transaction deleted successfully.');
+    }
+    public function status($id)
+    {
+        $data  = Transaction::find($id);
+        if ($data->active == true) {
+            $data->active = false;
+        } else {
+            $data->active = true;
+        }
+        $data->save();
+        return redirect()->route('transaction.index')->with('success', 'Transactionstatus update successfully.');
     }
 }

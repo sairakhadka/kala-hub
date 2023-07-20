@@ -3,74 +3,103 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
 use App\Models\User;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Hash;
+use App\Models\customer;
 
 class CustomerController extends Controller
 {
     public function index()
     {
-        $artists = User::where('role', 'artist')->get();
+        $customers = Customer::all();
 
-        return view('admin.dashboard.users.index', [
-            'artists' => $artists,
-        ]);
+        return view('admin.customer.index', compact('customers'));
     }
 
     public function create()
     {
-        return view('admin.dashboard.users.create');
+        return view('admin.customer.add');
     }
 
     public function store(Request $request)
     {
         $validatedData = $request->validate([
             'name' => 'required',
-            'email' => 'required|email|unique:users',
-            'password' => 'required|min:6',
-            'role' => 'required|in:artist',
+            'email' => 'required|email|unique:customers,email',
+            'password' => 'required|string|min:8|max:255',
+            'address' => 'required',
+            'phone' => 'required',
+            // 'gender' => 'required',
         ]);
 
-        $user = User::create([
+        Customer::create([
             'name' => $validatedData['name'],
             'email' => $validatedData['email'],
-            'password' => bcrypt($validatedData['password']),
-            'role' => $validatedData['role'],
+            'address' => $validatedData['address'],
+            'phone_number' => $validatedData['phone'],
+            'password' => Hash::make($validatedData['password']),
+            // 'password' => "password",
+            // 'gender' => $validatedData['gender'],
         ]);
 
-        return redirect()->route('admin.users.index')->with('success', 'User created successfully.');
+        // $customer = Customer::create([
+        //     'user_id' => $user->id,
+        //     'address' => $validatedData['address'],
+        //     'phone_number' => $validatedData['phone_number'],
+        //     'gender' => $validatedData['gender'],
+        // ]);
+
+        return redirect()->route('customer.index')->with('success', 'Customer created successfully.');
     }
 
-    public function edit(User $user)
+    public function edit($id)
     {
-        return view('admin.dashboard.users.edit', [
-            'user' => $user,
-        ]);
+        $data = Customer::find($id);
+        return view('admin.customer.edit', ['data' => $data]);
     }
 
-    public function update(Request $request, User $user)
+    public function update(Request $request)
     {
         $validatedData = $request->validate([
             'name' => 'required',
-            'email' => 'required|email|unique:users,email,' . $user->id,
-            'password' => 'nullable|min:6',
-            'role' => 'required|in:artist',
+            'email' => 'required',
+            'address' => 'required',
+            'phone' => 'required',
+            // 'gender' => 'required',
         ]);
 
-        $user->update([
-            'name' => $validatedData['name'],
-            'email' => $validatedData['email'],
-            'password' => isset($validatedData['password']) ? bcrypt($validatedData['password']) : $user->password,
-            'role' => $validatedData['role'],
-        ]);
 
-        return redirect()->route('admin.users.index')->with('success', 'User updated successfully.');
+        $id = $request->id;
+        $data = Customer::find($id);
+
+
+        $data->name = $request->name;
+        $data->email = $request->email;
+        $data->address = $request->address;
+        $data->phone_number = $request->phone;
+        // $data->gender = $request->gender;
+
+        $data->save();
+        return redirect()->route('customer.index')->with('success', 'Customer updated successfully.');
     }
 
-    public function destroy(User $user)
+    public function destroy(Customer $customer)
     {
-        $user->delete();
+        $customer->delete();
 
-        return redirect()->route('admin.users.index')->with('success', 'User deleted successfully.');
+        return redirect()->route('customer.index')->with('success', 'Customer deleted successfully.');
+    }
+    public function status($id)
+    {
+        $data  = Customer::find($id);
+        if ($data->active == true) {
+            $data->active = false;
+        } else {
+            $data->active = true;
+        }
+        $data->save();
+        return redirect()->route('customer.index')->with('success', 'Customer status update successfully.');
     }
 }
+

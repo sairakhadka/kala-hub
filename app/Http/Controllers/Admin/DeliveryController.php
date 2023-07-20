@@ -12,26 +12,31 @@ class DeliveryController extends Controller
     {
         $deliveries = Delivery::all();
 
-        return view('admin.dashboard.deliveries.index', [
+        return view('admin.delivery.index', [
             'deliveries' => $deliveries,
         ]);
     }
 
     public function create()
     {
-        return view('admin.dashboard.deliveries.create');
+        return view('admin.delivery.add');
     }
 
     public function store(Request $request)
     {
         $validatedData = $request->validate([
-            'name' => 'required|unique:deliveries',
-            'description' => 'required',
+            'customer_name' => 'required|unique:deliveries',
+            'customer_number' => 'required',
+            'customer_address' => 'required',
+
+
         ]);
 
         $delivery = Delivery::create([
-            'name' => $validatedData['name'],
-            'description' => $validatedData['description'],
+
+            'customer_name' => $validatedData['customer_name'],
+            'customer_number' => $validatedData['customer_number'],
+            'customer_address' => $validatedData['customer_address'],
         ]);
 
         return redirect()->route('admin.deliveries.index')->with('success', 'Delivery created successfully.');
@@ -39,7 +44,7 @@ class DeliveryController extends Controller
 
     public function edit(Delivery $delivery)
     {
-        return view('admin.dashboard.deliveries.edit', [
+        return view('admin.delivery.edit', [
             'delivery' => $delivery,
         ]);
     }
@@ -47,22 +52,36 @@ class DeliveryController extends Controller
     public function update(Request $request, Delivery $delivery)
     {
         $validatedData = $request->validate([
-            'name' => 'required|unique:deliveries,name,' . $delivery->id,
-            'description' => 'required',
+            'customer_name' => 'required|unique:deliveries,name,' . $delivery->id,
+            'customer_number' => 'required',
+            'address' => 'required',
+
         ]);
 
         $delivery->update([
-            'name' => $validatedData['name'],
-            'description' => $validatedData['description'],
+            'customer_name' => $validatedData['customer_name'],
+            'customer_number' => $validatedData['customer_number'],
+            'customer_address' => $validatedData['customer_address'],
         ]);
 
-        return redirect()->route('admin.deliveries.index')->with('success', 'Delivery updated successfully.');
+        return redirect()->route('delivery.index')->with('success', 'Delivery updated successfully.');
     }
 
     public function destroy(Delivery $delivery)
     {
         $delivery->delete();
 
-        return redirect()->route('admin.deliveries.index')->with('success', 'Delivery deleted successfully.');
+        return redirect()->route('delivery.index')->with('success', 'Delivery deleted successfully.');
+    }
+    public function status($id)
+    {
+        $data  = Delivery::find($id);
+        if ($data->active == true) {
+            $data->active = false;
+        } else {
+            $data->active = true;
+        }
+        $data->save();
+        return redirect()->route('delivery.index')->with('success', 'Delivery status update successfully.');
     }
 }
